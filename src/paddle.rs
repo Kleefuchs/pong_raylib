@@ -62,12 +62,36 @@ impl Paddle {
         }
         return false;
     }
-    pub fn update(&mut self, rl:&mut RaylibHandle, screen_height:i32) {
-        if (rl.is_key_down(self.upkey)) & (self.dest.y > 0.0) {
-            self.dest.y -= self.speed * rl.get_frame_time();
-        }
-        if (rl.is_key_down(self.downkey)) & ((self.dest.y + self.dest.height) < screen_height as f32) {
-            self.dest.y += self.speed * rl.get_frame_time();
+    pub fn update(&mut self, rl:&mut RaylibHandle, ball:&ball::Ball, against_ai:bool, is_left:bool, screen_height:i32) {
+        match is_left {
+            false=> {
+                match against_ai {
+                    false => {
+                        if (rl.is_key_down(self.upkey)) & (self.dest.y > 0.0) {
+                            self.dest.y -= self.speed * rl.get_frame_time();
+                        }
+                        if (rl.is_key_down(self.downkey)) & ((self.dest.y + self.dest.height) < screen_height as f32) {
+                            self.dest.y += self.speed * rl.get_frame_time();
+                        }
+                    }
+                    true => {
+                        if (self.dest.y + self.dest.height > ball.pos.y) & (self.dest.y > 0.0) {
+                            self.dest.y -= self.speed * rl.get_frame_time();
+                        }
+                        if (self.dest.y + self.dest.height < ball.pos.y) & (self.dest.y < screen_height as f32) {
+                            self.dest.y += self.speed * rl.get_frame_time();
+                        }
+                    }
+                }
+            }
+            true => {
+                if (rl.is_key_down(self.upkey)) & (self.dest.y > 0.0) {
+                    self.dest.y -= self.speed * rl.get_frame_time();
+                }
+                if (rl.is_key_down(self.downkey)) & ((self.dest.y + self.dest.height) < screen_height as f32) {
+                    self.dest.y += self.speed * rl.get_frame_time();
+                }     
+            }
         }
     }
     pub fn draw(&self, draw:&mut RaylibDrawHandle) {
