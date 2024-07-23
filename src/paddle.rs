@@ -7,7 +7,8 @@ pub struct Paddle {
     pub upkey: KeyboardKey,
     pub downkey: KeyboardKey,
     pub speed: f32,
-    pub points: u8
+    pub points: u8,
+    pub is_left:bool
 }
 
 #[allow(dead_code)]
@@ -24,7 +25,8 @@ impl Paddle {
             upkey: KeyboardKey::KEY_NULL,
             downkey: KeyboardKey::KEY_NULL,
             speed: 0.0,
-            points: 0
+            points: 0,
+            is_left: false
         };
         return  paddle;
     }
@@ -52,7 +54,8 @@ impl Paddle {
                 KeyboardKey::KEY_DOWN
             },
             speed: 400.0,
-            points: 0
+            points: 0,
+            is_left: is_left
         };
         *self = paddle;
     }
@@ -62,35 +65,36 @@ impl Paddle {
         }
         return false;
     }
-    pub fn update(&mut self, rl:&mut RaylibHandle, ball:&ball::Ball, against_ai:bool, is_left:bool, screen_height:i32) {
-        match is_left {
+    fn control_player(&mut self, rl:&mut RaylibHandle, screen_height:i32) {
+        if (rl.is_key_down(self.upkey)) & (self.dest.y > 0.0) {
+            self.dest.y -= self.speed * rl.get_frame_time();
+        }
+        if (rl.is_key_down(self.downkey)) & ((self.dest.y + self.dest.height) < screen_height as f32) {
+            self.dest.y += self.speed * rl.get_frame_time();
+        }
+    }
+    fn control_ai(&mut self, rl:&mut RaylibHandle, ball:&ball::Ball, screen_height:i32) {
+        if (self.dest.y + self.dest.height > ball.pos.y) & (self.dest.y > 0.0) {
+            self.dest.y -= self.speed * rl.get_frame_time();
+        }
+        if (self.dest.y + self.dest.height < ball.pos.y) & (self.dest.y < screen_height as f32) {
+            self.dest.y += self.speed * rl.get_frame_time();
+        }
+    }
+    pub fn update(&mut self, rl:&mut RaylibHandle, ball:&ball::Ball, against_ai:bool, screen_height:i32) {
+        match self.is_left {
             false=> {
                 match against_ai {
                     false => {
-                        if (rl.is_key_down(self.upkey)) & (self.dest.y > 0.0) {
-                            self.dest.y -= self.speed * rl.get_frame_time();
-                        }
-                        if (rl.is_key_down(self.downkey)) & ((self.dest.y + self.dest.height) < screen_height as f32) {
-                            self.dest.y += self.speed * rl.get_frame_time();
-                        }
+                        self.control_player(rl, screen_height);
                     }
                     true => {
-                        if (self.dest.y + self.dest.height > ball.pos.y) & (self.dest.y > 0.0) {
-                            self.dest.y -= self.speed * rl.get_frame_time();
-                        }
-                        if (self.dest.y + self.dest.height < ball.pos.y) & (self.dest.y < screen_height as f32) {
-                            self.dest.y += self.speed * rl.get_frame_time();
-                        }
+                        self.control_ai(rl, ball, screen_height);
                     }
                 }
             }
             true => {
-                if (rl.is_key_down(self.upkey)) & (self.dest.y > 0.0) {
-                    self.dest.y -= self.speed * rl.get_frame_time();
-                }
-                if (rl.is_key_down(self.downkey)) & ((self.dest.y + self.dest.height) < screen_height as f32) {
-                    self.dest.y += self.speed * rl.get_frame_time();
-                }     
+                self.control_player(rl, screen_height);    
             }
         }
     }
